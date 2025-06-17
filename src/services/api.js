@@ -2,7 +2,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://10.30.32.82:3000'; // Mesma URL
+const API_URL = 'http://172.21.104.3:3000'; // Mesma URL
 
 const api = axios.create({
   baseURL: API_URL,

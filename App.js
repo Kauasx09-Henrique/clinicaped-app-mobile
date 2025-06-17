@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image, View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Image, View, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -30,31 +30,10 @@ function LogoTitle() {
 }
 
 // ====================================================================
-// NAVEGADORES INDIVIDUAIS
+// NAVEGADORES DE CADA TIPO DE USUÁRIO
 // ====================================================================
 
-function PublicTabNavigator() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerTitle: () => <LogoTitle />,
-        headerTitleAlign: 'center',
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName = route.name === 'Home' 
-            ? (focused ? 'home' : 'home-outline')
-            : (focused ? 'log-in' : 'log-in-outline');
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Início' }} />
-      <Tab.Screen name="EscolhaLogin" component={EscolhaLoginScreen} options={{ tabBarLabel: 'Entrar' }} />
-    </Tab.Navigator>
-  );
-}
-
+// Navegador para Admin (com abas)
 function AdminTabNavigator() {
   return (
     <Tab.Navigator
@@ -77,27 +56,32 @@ function AdminTabNavigator() {
   );
 }
 
+// Navegador para Usuário Logado (com menu gaveta)
 function UserDrawerNavigator() {
   return (
     <Drawer.Navigator
       screenOptions={{
-        headerShown: false, // O cabeçalho será gerenciado por cada tela
+        // O cabeçalho agora deve ser gerenciado por cada tela individualmente
+        // para que possam adicionar o botão de abrir o menu.
+        headerShown: true,
+        headerTitleAlign: 'center',
+        headerTitle: () => <LogoTitle />,
       }}
     >
-      <Drawer.Screen 
-        name="DrawerHome" 
-        component={HomeScreen} 
-        options={{ title: 'Início', drawerIcon: ({color, size}) => <Ionicons name="home-outline" color={color} size={size}/> }} 
+      <Drawer.Screen
+        name="DrawerHome"
+        component={HomeScreen}
+        options={{ title: 'Início', drawerIcon: ({ color, size }) => <Ionicons name="home-outline" color={color} size={size} /> }}
       />
-      <Drawer.Screen 
-        name="MyConsultations" 
-        component={MyConsultationsScreen} 
-        options={{ title: 'Minhas Consultas', drawerIcon: ({color, size}) => <Ionicons name="calendar-outline" color={color} size={size}/> }} 
+      <Drawer.Screen
+        name="MyConsultations"
+        component={MyConsultationsScreen}
+        options={{ title: 'Minhas Consultas', drawerIcon: ({ color, size }) => <Ionicons name="calendar-outline" color={color} size={size} /> }}
       />
-      <Drawer.Screen 
-        name="EditMyProfile" 
-        component={EditMyProfileScreen} 
-        options={{ title: 'Meu Perfil', drawerIcon: ({color, size}) => <Ionicons name="person-circle-outline" color={color} size={size}/> }} 
+      <Drawer.Screen
+        name="EditMyProfile"
+        component={EditMyProfileScreen}
+        options={{ title: 'Meu Perfil', drawerIcon: ({ color, size }) => <Ionicons name="person-circle-outline" color={color} size={size} /> }}
       />
     </Drawer.Navigator>
   );
@@ -105,7 +89,7 @@ function UserDrawerNavigator() {
 
 
 // ====================================================================
-// EXPORTAÇÃO PRINCIPAL DO APP - COM LÓGICA DE NAVEGAÇÃO CORRIGIDA
+// COMPONENTE PRINCIPAL DO APP
 // ====================================================================
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -116,7 +100,7 @@ export default function App() {
       try {
         const token = await AsyncStorage.getItem('authToken');
         const role = await AsyncStorage.getItem('userRole');
-        
+
         if (token) {
           setInitialRouteName(role === 'admin' ? 'Admin' : 'User');
         } else {
@@ -132,25 +116,48 @@ export default function App() {
   }, []);
 
   if (isLoading) {
-    return <View style={styles.centered}><ActivityIndicator size="large"/></View>;
+    return <View style={styles.centered}><ActivityIndicator size="large" /></View>;
   }
 
   return (
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName={initialRouteName}>
-          {/* GRUPOS DE TELAS CONDICIONAIS */}
-          <Stack.Screen name="Public" component={PublicTabNavigator} options={{ headerShown: false }} />
-          <Stack.Screen name="Admin" component={AdminTabNavigator} options={{ headerShown: false }} />
-          <Stack.Screen name="User" component={UserDrawerNavigator} options={{ headerShown: false }} />
-          
-          {/* TELAS GLOBAIS - Acessíveis de qualquer lugar */}
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Marcarconsulta" component={MyConsultationsScreen} />
-          <Stack.Screen name="CadastroClinica" component={CadastroClinicaScreen} />
-          <Stack.Screen name="CadastroUsuarioScreen" component={CadastroUsuarioScreen}/>
-          <Stack.Screen name="EditarClinica" component={EditarClinicaScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="EditUserScreen" component={EditUserScreen} options={{ headerShown: false }} />
+
+          {/* GRUPO 1: FLUXOS PRINCIPAIS */}
+          {/* Telas que o usuário vê dependendo do seu status de login. */}
+          {/* Note que o 'Public' agora aponta direto para a HomeScreen. */}
+          <Stack.Screen
+            name="Public"
+            component={HomeScreen}
+            options={{
+              headerTitle: () => <LogoTitle />,
+              headerTitleAlign: 'center'
+            }}
+          />
+          <Stack.Screen
+            name="Admin"
+            component={AdminTabNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="User"
+            component={UserDrawerNavigator}
+            options={{ headerShown: false }}
+          />
+
+          {/* GRUPO 2: TELAS GLOBAIS / MODAIS */}
+          {/* Telas de login, cadastro, etc. que devem cobrir a tela inteira. */}
+          {/* Agrupá-las aqui garante que elas não mostrem os menus de abas/gaveta por baixo. */}
+          <Stack.Group screenOptions={{ headerTitleAlign: 'center' }}>
+            <Stack.Screen name="EscolhaLogin" component={EscolhaLoginScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="CadastroClinica" component={CadastroClinicaScreen} />
+            <Stack.Screen name="CadastroUsuarioScreen" component={CadastroUsuarioScreen} />
+            <Stack.Screen name="EditarClinica" component={EditarClinicaScreen} />
+            <Stack.Screen name="EditUserScreen" component={EditUserScreen} />
+          </Stack.Group>
+
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />
@@ -164,4 +171,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   }
-})
+});

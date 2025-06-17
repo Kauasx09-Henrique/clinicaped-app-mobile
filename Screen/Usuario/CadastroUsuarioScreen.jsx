@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { TextInput, Button, Text, RadioButton, HelperText, Appbar, Card } from 'react-native-paper';
+import { TextInput, Button, Text, RadioButton, HelperText, Appbar, Card, ActivityIndicator } from 'react-native-paper';
 import { mask } from 'remask';
 import Toast from 'react-native-toast-message';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import api from '../../src/services/api'; 
 
@@ -21,12 +22,12 @@ export default function CadastroUsuarioScreen({ navigation }) {
   const [genero, setGenero] = useState('');
   const [telefone, setTelefone] = useState('');
   const [cpf, setCpf] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
 
-// validaçoes 
+  // validaçoes 
   const validate = () => {
     const newErrors = {};
 
@@ -55,8 +56,8 @@ export default function CadastroUsuarioScreen({ navigation }) {
     if (!validate()) {
       Toast.show({
         type: 'error',
-        text1: 'Ops!',
-        text2: 'Por favor, corrija os erros no formulário.',
+        text1: 'Formulário incompleto',
+        text2: 'Por favor, preencha todos os campos corretamente',
       });
       return;
     }
@@ -79,7 +80,7 @@ export default function CadastroUsuarioScreen({ navigation }) {
       Toast.show({
         type: 'success',
         text1: 'Cadastro realizado!',
-        text2: `Bem-vindo, ${nome}!`,
+        text2: `Bem-vindo(a), ${nome}!`,
       });
       
       navigation.goBack();
@@ -88,7 +89,7 @@ export default function CadastroUsuarioScreen({ navigation }) {
       Toast.show({
         type: 'error',
         text1: 'Erro no Cadastro',
-        text2: err.response?.data?.message || 'Não foi possível completar o cadastro.',
+        text2: err.response?.data?.message || 'Não foi possível completar o cadastro',
       });
     } finally {
       setLoading(false);
@@ -96,18 +97,31 @@ export default function CadastroUsuarioScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.mainContainer}>
-      <Appbar.Header>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="Criar Nova Conta" />
+    <View style={styles.container}>
+      <Appbar.Header style={styles.header}>
+        <Appbar.BackAction onPress={() => navigation.goBack()} color="white" />
+        <Appbar.Content 
+          title="Criar Conta" 
+          titleStyle={styles.headerTitle}
+        />
       </Appbar.Header>
+      
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.headerContent}>
+            <Icon name="account-plus" size={60} color="#3A7EC3" style={styles.headerIcon} />
+            <Text style={styles.title}>Crie sua conta</Text>
+            <Text style={styles.subtitle}>Preencha os campos abaixo para se cadastrar</Text>
+          </View>
+          
           <Card style={styles.card}>
-            <Card.Content>
+            <Card.Content style={styles.cardContent}>
               <TextInput
                 label="Nome completo"
                 value={nome}
@@ -115,8 +129,11 @@ export default function CadastroUsuarioScreen({ navigation }) {
                 error={!!errors.nome}
                 style={styles.input}
                 mode="outlined"
+                outlineColor="#E0E8F0"
+                activeOutlineColor="#3A7EC3"
+                left={<TextInput.Icon icon="account" color="#7F8C8D" />}
               />
-              {errors.nome && <HelperText type="error">{errors.nome}</HelperText>}
+              {errors.nome && <HelperText type="error" style={styles.errorText}>{errors.nome}</HelperText>}
 
               <TextInput
                 label="E-mail"
@@ -127,31 +144,46 @@ export default function CadastroUsuarioScreen({ navigation }) {
                 error={!!errors.email}
                 style={styles.input}
                 mode="outlined"
+                outlineColor="#E0E8F0"
+                activeOutlineColor="#3A7EC3"
+                left={<TextInput.Icon icon="email" color="#7F8C8D" />}
               />
-              {errors.email && <HelperText type="error">{errors.email}</HelperText>}
+              {errors.email && <HelperText type="error" style={styles.errorText}>{errors.email}</HelperText>}
 
               <TextInput
                 label="Senha"
                 value={senha}
                 onChangeText={setSenha}
-                secureTextEntry={secureTextEntry}
+                secureTextEntry={!showPassword}
                 error={!!errors.senha}
                 style={styles.input}
                 mode="outlined"
-                right={<TextInput.Icon icon={secureTextEntry ? 'eye-off' : 'eye'} onPress={() => setSecureTextEntry(!secureTextEntry)}/>}
+                outlineColor="#E0E8F0"
+                activeOutlineColor="#3A7EC3"
+                left={<TextInput.Icon icon="lock" color="#7F8C8D" />}
+                right={
+                  <TextInput.Icon 
+                    icon={showPassword ? "eye-off" : "eye"} 
+                    onPress={() => setShowPassword(!showPassword)}
+                    color="#7F8C8D"
+                  />
+                }
               />
-              {errors.senha && <HelperText type="error">{errors.senha}</HelperText>}
+              {errors.senha && <HelperText type="error" style={styles.errorText}>{errors.senha}</HelperText>}
 
               <TextInput
                 label="Confirmar senha"
                 value={confirmarSenha}
                 onChangeText={setConfirmarSenha}
-                secureTextEntry={secureTextEntry}
+                secureTextEntry={!showPassword}
                 error={!!errors.confirmarSenha}
                 style={styles.input}
                 mode="outlined"
+                outlineColor="#E0E8F0"
+                activeOutlineColor="#3A7EC3"
+                left={<TextInput.Icon icon="lock-check" color="#7F8C8D" />}
               />
-              {errors.confirmarSenha && <HelperText type="error">{errors.confirmarSenha}</HelperText>}
+              {errors.confirmarSenha && <HelperText type="error" style={styles.errorText}>{errors.confirmarSenha}</HelperText>}
               
               <TextInput
                 label="CPF"
@@ -162,8 +194,11 @@ export default function CadastroUsuarioScreen({ navigation }) {
                 error={!!errors.cpf}
                 style={styles.input}
                 mode="outlined"
+                outlineColor="#E0E8F0"
+                activeOutlineColor="#3A7EC3"
+                left={<TextInput.Icon icon="card-account-details" color="#7F8C8D" />}
               />
-              {errors.cpf && <HelperText type="error">{errors.cpf}</HelperText>}
+              {errors.cpf && <HelperText type="error" style={styles.errorText}>{errors.cpf}</HelperText>}
 
               <TextInput
                 label="Telefone"
@@ -174,8 +209,11 @@ export default function CadastroUsuarioScreen({ navigation }) {
                 error={!!errors.telefone}
                 style={styles.input}
                 mode="outlined"
+                outlineColor="#E0E8F0"
+                activeOutlineColor="#3A7EC3"
+                left={<TextInput.Icon icon="phone" color="#7F8C8D" />}
               />
-              {errors.telefone && <HelperText type="error">{errors.telefone}</HelperText>}
+              {errors.telefone && <HelperText type="error" style={styles.errorText}>{errors.telefone}</HelperText>}
 
               <TextInput
                 label="Data de nascimento"
@@ -187,30 +225,62 @@ export default function CadastroUsuarioScreen({ navigation }) {
                 error={!!errors.dataNascimento}
                 style={styles.input}
                 mode="outlined"
+                outlineColor="#E0E8F0"
+                activeOutlineColor="#3A7EC3"
+                left={<TextInput.Icon icon="calendar" color="#7F8C8D" />}
               />
-              {errors.dataNascimento && <HelperText type="error">{errors.dataNascimento}</HelperText>}
+              {errors.dataNascimento && <HelperText type="error" style={styles.errorText}>{errors.dataNascimento}</HelperText>}
 
               <Text style={styles.label}>Gênero</Text>
               <RadioButton.Group onValueChange={setGenero} value={genero}>
                 <View style={styles.radioGroup}>
-                  <View style={styles.radioItem}><RadioButton value="Masculino" /><Text>Masculino</Text></View>
-                  <View style={styles.radioItem}><RadioButton value="Feminino" /><Text>Feminino</Text></View>
-                  <View style={styles.radioItem}><RadioButton value="Outro" /><Text>Outro</Text></View>
+                  <View style={styles.radioItem}>
+                    <RadioButton.Android 
+                      value="Masculino" 
+                      color="#3A7EC3"
+                      uncheckedColor="#95A5A6"
+                    />
+                    <Text style={styles.radioText}>Masculino</Text>
+                  </View>
+                  <View style={styles.radioItem}>
+                    <RadioButton.Android 
+                      value="Feminino" 
+                      color="#3A7EC3"
+                      uncheckedColor="#95A5A6"
+                    />
+                    <Text style={styles.radioText}>Feminino</Text>
+                  </View>
+                  <View style={styles.radioItem}>
+                    <RadioButton.Android 
+                      value="Outro" 
+                      color="#3A7EC3"
+                      uncheckedColor="#95A5A6"
+                    />
+                    <Text style={styles.radioText}>Outro</Text>
+                  </View>
                 </View>
               </RadioButton.Group>
-              {errors.genero && <HelperText type="error" style={{marginTop: -10}}>{errors.genero}</HelperText>}
+              {errors.genero && <HelperText type="error" style={[styles.errorText, {marginTop: -10}]}>{errors.genero}</HelperText>}
 
-              <Button
-                mode="contained"
-                onPress={handleSubmit}
-                loading={loading}
-                disabled={loading}
-                style={styles.button}
-                labelStyle={styles.buttonLabel}
-                icon="account-plus"
-              >
-                {loading ? 'Cadastrando...' : 'Finalizar Cadastro'}
-              </Button>
+              {loading ? (
+                <ActivityIndicator 
+                  animating={true} 
+                  size="large" 
+                  color="#3A7EC3" 
+                  style={styles.loader}
+                />
+              ) : (
+                <Button
+                  mode="contained"
+                  onPress={handleSubmit}
+                  style={styles.button}
+                  labelStyle={styles.buttonLabel}
+                  contentStyle={styles.buttonContent}
+                  icon="account-check"
+                >
+                  Finalizar Cadastro
+                </Button>
+              )}
             </Card.Content>
           </Card>
         </ScrollView>
@@ -220,40 +290,109 @@ export default function CadastroUsuarioScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
+  container: {
     flex: 1,
-    backgroundColor: '#f0f2f5'
+    backgroundColor: '#F8FAFF',
+  },
+  header: {
+    backgroundColor: '#3A7EC3',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  headerTitle: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 18,
   },
   scrollContainer: {
-    padding: 16,
-    paddingBottom: 40
+    padding: 24,
+    paddingBottom: 40,
+  },
+  headerContent: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  headerIcon: {
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#2C3E50',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#7F8C8D',
+    textAlign: 'center',
+    marginTop: 8,
+    maxWidth: 300,
   },
   card: {
-    borderRadius: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#3A7EC3',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    backgroundColor: 'white',
+  },
+  cardContent: {
+    padding: 24,
   },
   input: {
-    marginTop: 12,
+    backgroundColor: 'white',
+    marginBottom: 8,
+  },
+  errorText: {
+    marginTop: -8,
+    marginBottom: 8,
+    fontSize: 13,
   },
   label: {
-    marginTop: 16,
-    marginBottom: 8,
     fontSize: 16,
-    color: '#333'
+    fontWeight: '600',
+    color: '#2C3E50',
+    marginTop: 8,
+    marginBottom: 12,
   },
   radioGroup: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 8
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   radioItem: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+  },
+  radioText: {
+    color: '#34495E',
+    marginLeft: 8,
   },
   button: {
-    marginTop: 24,
+    marginTop: 20,
+    borderRadius: 12,
+    backgroundColor: '#3A7EC3',
     paddingVertical: 8,
+    shadowColor: '#3A7EC3',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   buttonLabel: {
+    color: 'white',
+    fontWeight: '600',
     fontSize: 16,
-  }
+  },
+  buttonContent: {
+    height: 48,
+  },
+  loader: {
+    marginVertical: 24,
+  },
 });

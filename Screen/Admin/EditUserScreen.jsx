@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { TextInput, Button, Card, ActivityIndicator, Text, Appbar, RadioButton } from 'react-native-paper';
+import { TextInput, Button, Card, ActivityIndicator, Text, Appbar, RadioButton, Avatar } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
-import api from '../../src/services/api'; 
+import api from '../../src/services/api';
 
 const EditUserScreen = ({ route, navigation }) => {
   const { userData } = route.params;
@@ -43,6 +43,10 @@ const EditUserScreen = ({ route, navigation }) => {
     return <Text>Nenhum usuário selecionado.</Text>;
   }
 
+  // Define as propriedades do Avatar com base na função do usuário
+  const avatarIcon = role === 'admin' ? 'shield-crown' : 'account-circle';
+  const avatarColor = role === 'admin' ? '#FFD700' : '#6200ee'; // Dourado para admin, Roxo para user
+
   return (
     <View style={styles.container}>
       <Appbar.Header>
@@ -52,6 +56,12 @@ const EditUserScreen = ({ route, navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Card style={styles.card}>
           <Card.Content>
+            
+            {/* ✅✅✅ AVATAR DINÂMICO ADICIONADO AQUI ✅✅✅ */}
+            <View style={styles.avatarContainer}>
+              <Avatar.Icon size={80} icon={avatarIcon} color="#fff" style={{ backgroundColor: avatarColor }} />
+            </View>
+
             <TextInput label="Nome Completo" value={nome} onChangeText={setNome} style={styles.input} mode="outlined"/>
             <TextInput label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" style={styles.input} mode="outlined"/>
             
@@ -85,6 +95,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0f2f5' },
   scrollContainer: { padding: 16 },
   card: { borderRadius: 12 },
+  // ✅ Estilo para o container do avatar
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
   input: { marginBottom: 16 },
   roleTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 16, marginBottom: 8 },
   radioItem: { flexDirection: 'row', alignItems: 'center' },
